@@ -1,0 +1,23 @@
+name: musikku
+description: Personal music app, offline-first, storage di R2.
+publish_to: "none"
+version: 0.1.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # sqflite: ^latest       # atau drift, pilih salah satu
+  # just_audio: ^latest
+  # dio: ^latest
+  # path_provider: ^latest # buat akses app cache dir
+  # uuid: ^latest
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
