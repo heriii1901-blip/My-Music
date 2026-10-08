@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      '${playing.title} - ${playing.artist}',
+                      playing.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
