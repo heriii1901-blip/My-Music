@@ -24,5 +24,19 @@ class Song {
     this.localCachePath,
   });
 
+  Song copyWith({bool? isPinned, String? localCachePath}) {
+    return Song(
+      id: id,
+      title: title,
+      artist: artist,
+      durationMs: durationMs,
+      r2Key: r2Key,
+      coverR2Key: coverR2Key,
+      addedAt: addedAt,
+      isPinned: isPinned ?? this.isPinned,
+      localCachePath: localCachePath ?? this.localCachePath,
+    );
+  }
+
   // TODO: fromMap() / toMap() buat konversi ke/dari SQLite row
 }
