@@ -35,11 +35,7 @@ class SongTile extends StatelessWidget {
         color: cached ? Colors.greenAccent : color.outline,
       ),
       title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
-      subtitle: Text(
-        '${song.artist} • ${_formatDuration(song.durationMs)}',
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+      subtitle: Text(_formatDuration(song.durationMs)),
       trailing: IconButton(
         icon: Icon(song.isPinned ? Icons.push_pin : Icons.push_pin_outlined),
         onPressed: onTogglePin,
