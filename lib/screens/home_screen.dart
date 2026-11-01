@@ -18,6 +18,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _playingId;
 
   SortMode _sort = SortMode.terbaru;
+  bool _reversed = false; // false = panah bawah (normal), true = panah atas (kebalikan)
   bool _selecting = false;
   final Set<String> _selected = {};
 
@@ -67,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen> {
             (a, b) => a.title.toLowerCase().compareTo(b.title.toLowerCase()));
         break;
     }
-    return list;
+    return _reversed ? list.reversed.toList() : list;
   }
 
   String _sortLabel(SortMode m) {
@@ -86,24 +87,46 @@ class _HomeScreenState extends State<HomeScreen> {
   void _showSortSheet() {
     showModalBottomSheet(
       context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(16),
-              child: Text('Urutkan', style: TextStyle(fontSize: 18)),
-            ),
-            for (final m in SortMode.values)
-              ListTile(
-                title: Text(_sortLabel(m)),
-                trailing: _sort == m ? const Icon(Icons.check) : null,
-                onTap: () {
-                  setState(() => _sort = m);
-                  Navigator.pop(ctx);
-                },
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text('Urutkan', style: TextStyle(fontSize: 18)),
               ),
-          ],
+              for (final m in SortMode.values)
+                ListTile(
+                  // Kiri: panah arah urutan (cuma muncul di opsi yang aktif)
+                  leading: SizedBox(
+                    width: 24,
+                    child: _sort == m
+                        ? Icon(
+                            _reversed
+                                ? Icons.arrow_upward
+                                : Icons.arrow_downward,
+                            size: 20,
+                          )
+                        : null,
+                  ),
+                  title: Text(_sortLabel(m)),
+                  // Kanan: ceklis opsi aktif
+                  trailing: _sort == m ? const Icon(Icons.check) : null,
+                  onTap: () {
+                    setState(() {
+                      if (_sort == m) {
+                        _reversed = !_reversed; // ketuk lagi = balik arah
+                      } else {
+                        _sort = m;
+                        _reversed = false;
+                      }
+                    });
+                    setSheet(() {});
+                  },
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -127,13 +150,21 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Kalau semua yang dipilih sudah di-pin -> lepas pin. Selain itu -> pin semua.
-  void _applyPin() {
-    final chosen = _songs.where((s) => _selected.contains(s.id)).toList();
-    final allPinned = chosen.every((s) => s.isPinned);
+  void _toggleSelectAll() {
+    setState(() {
+      if (_selected.length == _songs.length) {
+        _selected.clear();
+      } else {
+        _selected.addAll(_songs.map((s) => s.id));
+      }
+    });
+  }
+
+  // pin = true -> pin semua yang dipilih. pin = false -> lepas pin semuanya.
+  void _setPin(bool pin) {
     setState(() {
       _songs = _songs.map((s) {
-        return _selected.contains(s.id) ? s.copyWith(isPinned: !allPinned) : s;
+        return _selected.contains(s.id) ? s.copyWith(isPinned: pin) : s;
       }).toList();
     });
     _exitSelect();
@@ -149,9 +180,9 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('${_selected.length} dipilih'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.push_pin_outlined),
-            tooltip: 'Pin / lepas pin',
-            onPressed: _selected.isEmpty ? null : _applyPin,
+            icon: const Icon(Icons.select_all),
+            tooltip: 'Pilih semua',
+            onPressed: _toggleSelectAll,
           ),
         ],
       );
@@ -174,6 +205,45 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ],
+    );
+  }
+
+  Widget? _buildBottomBar(Song? playing) {
+    if (_selecting) {
+      final empty = _selected.isEmpty;
+      return BottomAppBar(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            TextButton.icon(
+              onPressed: empty ? null : () => _setPin(true),
+              icon: const Icon(Icons.push_pin),
+              label: const Text('Pin'),
+            ),
+            TextButton.icon(
+              onPressed: empty ? null : () => _setPin(false),
+              icon: const Icon(Icons.push_pin_outlined),
+              label: const Text('Lepas pin'),
+            ),
+          ],
+        ),
+      );
+    }
+    if (playing == null) return null;
+    return BottomAppBar(
+      child: Row(
+        children: [
+          const Icon(Icons.music_note),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              playing.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -211,23 +281,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: const Icon(Icons.add),
             ),
-      bottomNavigationBar: playing == null
-          ? null
-          : BottomAppBar(
-              child: Row(
-                children: [
-                  const Icon(Icons.music_note),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      playing.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      bottomNavigationBar: _buildBottomBar(playing),
     );
   }
 }
