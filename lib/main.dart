@@ -1,7 +1,24 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'screens/home_screen.dart';
 
-void main() => runApp(const MusikkuApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Putar di latar belakang cuma ada di HP (Android/iOS), di Windows dilewati
+  if (!kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS)) {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.musikku.app.channel.audio',
+      androidNotificationChannelName: 'Pemutar Musikku',
+      androidNotificationOngoing: true,
+    );
+  }
+
+  runApp(const MusikkuApp());
+}
 
 class MusikkuApp extends StatelessWidget {
   const MusikkuApp({super.key});
