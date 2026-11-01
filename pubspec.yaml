@@ -9,7 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # sqflite: ^latest       # atau drift, pilih salah satu
+  file_picker: ^8.1.2
+  # sqflite: ^latest
   # just_audio: ^latest
   # dio: ^latest
   # path_provider: ^latest # buat akses app cache dir
@@ -21,3 +22,13 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: assets/fonts/Poppins-Regular.ttf
+        - asset: assets/fonts/Poppins-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Poppins-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Poppins-Bold.ttf
+          weight: 700
