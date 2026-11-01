@@ -8,15 +8,27 @@ class MusikkuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: Colors.deepPurple,
+      brightness: Brightness.dark,
+    );
+
     return MaterialApp(
-      title: 'musikku',
+      title: 'Musikku',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
+        fontFamily: 'Poppins',
+        colorScheme: scheme,
         useMaterial3: true,
+        appBarTheme: AppBarTheme(
+          titleTextStyle: TextStyle(
+            fontFamily: 'Poppins',
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+            color: scheme.onSurface,
+          ),
+        ),
       ),
       home: const HomeScreen(),
     );
