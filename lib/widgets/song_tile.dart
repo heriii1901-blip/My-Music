@@ -35,14 +35,26 @@ class SongTile extends StatelessWidget {
       // Kiri: cover lagu. Sementara placeholder, nanti diganti gambar dari coverR2Key.
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Container(
-          width: 48,
-          height: 48,
-          color: color.surfaceContainerHighest,
-          child: Icon(Icons.music_note, color: color.outline),
-        ),
+          child: song.coverBytes != null
+            ? Image.memory(
+                song.coverBytes!,
+                width: 48,
+                height: 48,
+                fit: BoxFit.cover,
+              )
+            : Container(
+                width: 48,
+                height: 48,
+                color: color.surfaceContainerHighest,
+                child: Icon(Icons.music_note, color: color.outline),
+              ),
       ),
-      title: Text(song.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+      title: Text(
+        song.title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.w600),
+      ),
       subtitle: Row(
         children: [
           // Penanda kecil lagu yang di-pin. Hapus blok if ini kalau gak mau.
