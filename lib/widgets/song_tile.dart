@@ -71,10 +71,9 @@ class SongTile extends StatelessWidget {
               value: selected,
               onChanged: (_) => onTap(),
             )
-          : Icon(
-              cached ? Icons.check_circle : Icons.cloud_outlined,
-              color: cached ? Colors.greenAccent : color.outline,
-            ),
+            : (cached
+              ? const Icon(Icons.check_circle, color: Colors.greenAccent)
+              : null),
     );
   }
 }
