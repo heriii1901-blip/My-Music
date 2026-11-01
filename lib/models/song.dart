@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 // Model buat satu lagu.
 // TODO: sesuaikan field kalau ada tambahan (misal genre, playlist_id, dll)
 
@@ -8,6 +10,7 @@ class Song {
   final int durationMs;
   final String r2Key; // path/key file di R2, bukan URL langsung
   final String? coverR2Key; // optional, kalau mau ada cover art
+  final Uint8List? coverBytes; // cover hasil generate (PNG), sementara di memori
   final DateTime addedAt;
   final bool isPinned; // true = ngk boleh kehapus otomatis dari cache
   final String? localCachePath; // null kalau belum pernah didownload/cache
@@ -19,6 +22,7 @@ class Song {
     required this.durationMs,
     required this.r2Key,
     this.coverR2Key,
+    this.coverBytes,
     required this.addedAt,
     this.isPinned = false,
     this.localCachePath,
@@ -32,6 +36,7 @@ class Song {
       durationMs: durationMs,
       r2Key: r2Key,
       coverR2Key: coverR2Key,
+      coverBytes: coverBytes,
       addedAt: addedAt,
       isPinned: isPinned ?? this.isPinned,
       localCachePath: localCachePath ?? this.localCachePath,
