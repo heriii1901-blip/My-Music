@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/song.dart';
 import '../widgets/song_tile.dart';
+import 'upload_screen.dart';
 
 enum SortMode { terbaru, dipin, diunduh, abjad }
 
@@ -199,11 +200,14 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: _selecting
           ? null
           : FloatingActionButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content: Text('Tambah lagu: belum diimplementasi')),
+              onPressed: () async {
+                final newSong = await Navigator.push<Song>(
+                  context,
+                  MaterialPageRoute(builder: (_) => const UploadScreen()),
                 );
+                if (newSong != null) {
+                  setState(() => _songs.add(newSong));
+                }
               },
               child: const Icon(Icons.add),
             ),
