@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:just_audio_background/just_audio_background.dart';
+import '../config.dart';
 import '../models/song.dart';
+import '../services/r2_service.dart';
 
 class PlayerController {
   final AudioPlayer player = AudioPlayer();
@@ -31,33 +33,31 @@ class PlayerController {
     });
   }
 
+  // File lokal kalau ada, kalau nggak streaming dari R2 lewat Worker.
+  AudioSource _sourceOf(Song s) {
+    final tag = MediaItem(id: s.id, title: s.title, artist: s.artist);
+    final path = s.localCachePath;
+    if (path != null && File(path).existsSync()) {
+      return AudioSource.file(path, tag: tag);
+    }
+    return AudioSource.uri(
+      Uri.parse(R2Service.songUrl(s.id)),
+      headers: Config.authHeaders,
+      tag: tag,
+    );
+  }
+
   /// Putar [song]. [queue] = urutan lagu yang lagi tampil di list.
   /// Return null kalau sukses, atau pesan error kalau gagal.
   Future<String?> play(Song song, List<Song> queue) async {
-    if (song.localCachePath == null) {
-      return 'Lagu ini belum bisa diputar (streaming dari R2 belum dibuat)';
-    }
-
-    // Playlist cuma isi lagu yang filenya beneran ada
-    final playable = queue.where((s) {
-      final p = s.localCachePath;
-      return p != null && File(p).existsSync();
-    }).toList();
-
-    final index = playable.indexWhere((s) => s.id == song.id);
-    if (index == -1) return 'Gagal memutar lagu: file tidak ditemukan';
+    final index = queue.indexWhere((s) => s.id == song.id);
+    if (index == -1) return 'Lagu tidak ditemukan di daftar';
 
     try {
-      _playlist = playable;
+      _playlist = List.of(queue);
       await player.setAudioSource(
         ConcatenatingAudioSource(
-          children: [
-            for (final s in playable)
-              AudioSource.file(
-                s.localCachePath!,
-                tag: MediaItem(id: s.id, title: s.title, artist: s.artist),
-              ),
-          ],
+          children: [for (final s in queue) _sourceOf(s)],
         ),
         initialIndex: index,
         initialPosition: Duration.zero,
@@ -66,7 +66,7 @@ class PlayerController {
       player.play(); // tanpa await, future-nya baru selesai pas lagu habis
       return null;
     } catch (e) {
-      return 'Gagal memutar lagu';
+      return 'Gagal memutar lagu: $e';
     }
   }
 
