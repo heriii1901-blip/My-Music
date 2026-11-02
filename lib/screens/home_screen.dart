@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/song.dart';
 import '../widgets/song_tile.dart';
+import '../player/player_controller.dart';
+import '../services/r2_service.dart';
 import 'upload_screen.dart';
 
 enum SortMode { terbaru, dipin, diunduh, abjad }
@@ -13,8 +15,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // Data dummy dulu. Nanti diganti load dari AppDatabase.
-  late List<Song> _songs;
+  List<Song> _songs = [];
+  bool _loading = true;
+  String? _error;
   String? _playingId;
 
   SortMode _sort = SortMode.terbaru;
@@ -25,19 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _songs = List.generate(12, (i) {
-      return Song(
-        id: 'dummy-$i',
-        title: 'Lagu Contoh ${i + 1}',
-        artist: i.isEven ? 'Artis A' : 'Artis B',
-        durationMs: (150 + i * 17) * 1000,
-        r2Key: 'songs/dummy-$i.mp3',
-        // dibedain per jam biar urutan "Terbaru" kelihatan
-        addedAt: DateTime.now().subtract(Duration(hours: i)),
-        // tiap lagu ke-3 dianggap sudah ke-cache
-        localCachePath: i % 3 == 0 ? '/dummy/path/$i.mp3' : null,
-      );
-    });
+    _loadLibrary();
   }
 
   // ---------- Urutan ----------
