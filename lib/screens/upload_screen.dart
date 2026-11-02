@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:just_audio/just_audio.dart';
 import '../models/song.dart';
+import '../services/r2_service.dart';
 import '../widgets/generated_cover.dart';
 
 class UploadScreen extends StatefulWidget {
@@ -64,7 +67,7 @@ class _UploadScreenState extends State<UploadScreen> {
       final boundary =
           _coverKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary != null) {
-        final image = await boundary.toImage(pixelRatio: 3);
+        final image = await boundary.toImage(pixelRatio: 2);
         final data = await image.toByteData(format: ui.ImageByteFormat.png);
         coverBytes = data?.buffer.asUint8List();
       }
@@ -72,20 +75,49 @@ class _UploadScreenState extends State<UploadScreen> {
 
     if (!mounted) return;
 
-    // TODO: upload file ke R2 lewat R2Service (presigned URL dari Worker).
-    // Sementara file dipakai langsung dari lokasi aslinya.
     final id = DateTime.now().microsecondsSinceEpoch.toString();
-    final song = Song(
-      id: id,
-      title: _titleCtrl.text.trim(),
-      artist: 'Tidak diketahui',
-      durationMs: 0, // TODO: isi pas just_audio sudah dipasang
-      r2Key: 'songs/$id.mp3',
-      coverBytes: coverBytes,
-      addedAt: DateTime.now(),
-      localCachePath: _file!.path,
-    );
-    Navigator.pop(context, song);
+    final title = _titleCtrl.text.trim();
+    final addedAt = DateTime.now();
+
+    try {
+      // Baca durasi asli dari file mp3
+      var durationMs = 0;
+      final probe = AudioPlayer();
+      try {
+        final d = await probe.setFilePath(_file!.path!);
+        durationMs = d?.inMilliseconds ?? 0;
+      } catch (_) {}
+      await probe.dispose();
+
+      await R2Service().uploadSong(
+        id: id,
+        title: title,
+        artist: 'Tidak diketahui',
+        durationMs: durationMs,
+        addedAt: addedAt,
+        file: File(_file!.path!),
+        cover: coverBytes,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(
+        context,
+        Song(
+          id: id,
+          title: title,
+          artist: 'Tidak diketahui',
+          durationMs: durationMs,
+          r2Key: 'songs/$id.mp3',
+          coverBytes: coverBytes,
+          addedAt: addedAt,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _saving = false);
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Upload gagal: $e')));
+    }
   }
 
   String _formatSize(int bytes) =>
@@ -225,10 +257,16 @@ class _UploadScreenState extends State<UploadScreen> {
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text(
-                'Simpan',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
+              child: _saving
+                  ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text(
+                      'Simpan',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
             ),
           ],
         ),
